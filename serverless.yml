@@ -1,0 +1,90 @@
+frameworkVersion: '2'
+
+service: contacts-service
+
+custom:
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+      seed: true
+    seed:
+      domain:
+        sources:
+          - table: ${self:provider.stage}-contacts
+            sources: [./contacts.json]
+
+provider:
+  lambdaHashingVersion: 20201221
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: eu-west-3
+  profile: pocs
+  environment:
+    CONTACTS_TABLE_NAME: ${self:provider.stage}-contacts
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - { "Fn::GetAtt": [ "ContactsDynamoDBTable", "Arn" ] }
+
+resources:
+  Resources:
+    ContactsDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.CONTACTS_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: name
+            AttributeType: S
+        KeySchema:
+          - AttributeName: name
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+functions:
+  getContacts:
+    handler: ./src/handler.getContactsHandler
+    events:
+      - http:
+          path: contact
+          method: get
+          cors: true
+  findByName:
+    handler: ./src/handler.findByNameHandler
+    events:
+      - http:
+          path: contact/{name}
+          method: get
+          cors: true
+  addContacts:
+    handler: ./src/handler.addContactsHandler
+    events:
+      - http:
+          path: contact
+          method: put
+          cors: true
+
+package:
+  patterns:
+    - '!**'
+    - 'src/**'
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-dynamodb-local
+  - serverless-offline

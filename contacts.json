@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Pepe",
+    "address": "Calle de pepe",
+    "phone": "+XXXXXXXXXXX"
+  },
+  {
+    "name": "Luis",
+    "address": "Calle de luis",
+    "phone": "+YYYYYYYYYYY"
+  },
+  {
+    "name": "Juan",
+    "address": "Calle de juan",
+    "phone": "+ZZZZZZZZZZZ"
+  }
+]
